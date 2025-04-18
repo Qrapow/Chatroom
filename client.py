@@ -1,15 +1,16 @@
+# Author: QinShenYu
+# This code base has been modified using AI assistance.
 import socket
 import threading
 import sys
 from datetime import datetime
 
-print("Powered By QinShenYu")
 class ChatClient:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.username = None
         self.running = True
-        self.lock = threading.Lock() # 新增线程锁
+        self.lock = threading.Lock()
 
     def setup_username(self):
         self.username = input("请输入用户名: ").strip()

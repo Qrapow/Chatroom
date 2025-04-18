@@ -1,10 +1,10 @@
-# server.py
+# Author: QinShenYu
+# This code base has been modified using AI assistance.
 import socket
 import threading
 import yaml
 from datetime import datetime
 
-print("Powered By QinShenYu")
 class ChatServer:
     def __init__(self, port=5126):
         self.host = '0.0.0.0'
