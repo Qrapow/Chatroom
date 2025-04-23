@@ -13,10 +13,10 @@ class ChatClient:
         self.lock = threading.Lock()
 
     def setup_username(self):
-        self.username = input("请输入用户名: ").strip()
+        userip = socket.gethostbyname(socket.gethostname())
+        self.username = input(f"请输入用户名(或者直接回车并使用{userip}作为用户名): ").strip()
         while not self.username:
-            print("用户名不能为空！")
-            self.username = input("请输入用户名: ").strip()
+            self.username = userip
         try:
             self.sock.send(self.username.encode())
         except Exception as e:
@@ -37,7 +37,7 @@ class ChatClient:
     def print_welcome(self):
         print("\n" + "="*40)
         print(f"You Joined: [{self.username}]")
-        print("输入消息开始聊天（输入/q退出）")
+        print("输入消息开始聊天 (输入/help获取帮助信息)")
         print("="*40 + "\n", flush=True)
 
     def start_receiver(self):
@@ -51,7 +51,7 @@ class ChatClient:
                         return
                     
                     # 添加消息时间戳
-                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    timestamp= datetime.now().strftime("%H:%M:%S")
                     self.safe_print(f"\n[{timestamp}] {data}")
                 except Exception as e:
                     self.safe_print(f"\n[Error] 接收失败: {str(e)}")
@@ -62,7 +62,7 @@ class ChatClient:
     def safe_print(self, text):
         with self.lock:
             print(text, flush=True)
-            sys.stdout.write("Type Message Here: ")  # 保持输入提示可见
+            # sys.stdout.write("Type Message Here: ")  # 保持输入提示可见
             sys.stdout.flush()
 
     def send_loop(self):
@@ -72,7 +72,7 @@ class ChatClient:
                     msg = input("Type Message Here:").strip()
                     if not msg:
                         continue
-                    if msg == '/q':
+                    if msg == '/exit':
                         self.shutdown()
                         return
                     
@@ -100,21 +100,21 @@ class ChatClient:
         print("\n连接已关闭")
         sys.exit(0)
 def start_client():
-    choice = input("创建房间(C) 还是加入房间(J)? ").upper()
+    choice = input("创建房间[C] / 加入房间[J]: ").upper()
 
     if choice == 'C':
         from server import ChatServer
-        port = int(input("输入端口号 (5126): ") or 5126)
+        port = int(input("输入端口号(默认:5126): ") or 5126)
         server = ChatServer(port)
         server.load_config()
-        print(f"服务端在端口 {port} 启动...")
+        # print(f"服务端在端口 {port} 启动...")
         server_thread = threading.Thread(target=server.start)
         server_thread.daemon = True
         server_thread.start()
         host = '127.0.0.1'
     else:
         host = input("输入服务器地址: ")
-        port = int(input("输入端口号: ") or 5126)
+        port = int(input("输入端口号(默认:5126): ") or 5126)
 
     client = ChatClient()
     client.connect_to_server(host, port)

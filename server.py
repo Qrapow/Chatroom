@@ -21,7 +21,7 @@ class ChatServer:
                 config = yaml.safe_load(f)
                 self.port = config.get('port', self.port)
                 self.banned_ips = set(config.get('banned_ips', []))
-                print(f"Loaded config: Port={self.port}, Banned IPs={self.banned_ips}")
+                # print(f"Loaded config: Port={self.port}, Banned IPs={self.banned_ips}")
         except FileNotFoundError:
             print('Using default configuration')
 
@@ -50,8 +50,10 @@ class ChatServer:
             self.server_socket.close()
 
     def handle_client(self, client_socket, addr):
+        usercount=0
+        usernamelist=[]
         try:
-            # 获取用户名（第一组数据必须是用户名）
+            # 获取用户名
             username = client_socket.recv(1024).decode().strip()
             if not username:
                 raise ValueError("Empty username")
@@ -66,6 +68,8 @@ class ChatServer:
             
             # 广播用户加入
             self.broadcast(f"[Server] {username} Joined.", exclude=client_socket)
+            usercount+=1
+            usernamelist+=[username]
             
             # 消息处理循环
             while True:
@@ -76,16 +80,22 @@ class ChatServer:
                     
                     # 处理命令（示例：/mute）
                     if msg.startswith('/'):
-                        # 可扩展命令处理逻辑
-                        pass
+                        if msg == '/help':
+                            print("help test")
+                        if msg == '/list':
+                            # print(f"Online Members({len()}): ")
+                            pass
+                        else:
+                            print("Unknown Command, Type /help For Help.")
                     else:
-                        # 添加时间戳广播
-                        timestamp = datetime.now().strftime("%H:%M:%S")
-                        self.broadcast(f"[{timestamp}] {username}: {msg}")
+                        # 添加广播
+                        timestamp= datetime.now().strftime("%H:%M:%S")
+                        self.broadcast(f"{username}: {msg}")
+                        continue
                 except ConnectionResetError:
                     break  # 客户端异常断开
         except Exception as e:
-            print(f"[服务端错误] {addr} 连接异常: {str(e)}")
+            print(f"[服务端错误] {timestamp} {addr} 连接异常: {str(e)}")
         finally:
             # 清理客户端资源
             with self.lock:
@@ -93,6 +103,11 @@ class ChatServer:
                     left_user = self.clients[client_socket]
                     del self.clients[client_socket]
                     self.broadcast(f"[Server] {left_user} Exited.")
+                    usercount-=1
+                    
+                    usernamelist-=[left_user] 
+                    ##### TEST CODE #####
+                    
             client_socket.close()
     def broadcast(self, message, exclude=None):
         with self.lock:
